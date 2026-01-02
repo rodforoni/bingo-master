@@ -4,7 +4,7 @@ import { SetupForm } from './components/SetupForm';
 import { Board } from './components/Board';
 import { BingoBall } from './components/BingoBall';
 import { playTickSound, playSuccessSound, playFinishSound } from './services/audioService';
-import { RefreshCw, ArrowLeft, Trophy } from 'lucide-react';
+import { RefreshCw, ArrowLeft, Trophy, History } from 'lucide-react';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.SETUP);
@@ -86,6 +86,11 @@ const App: React.FC = () => {
 
   }, [config, drawnNumbers]);
 
+  // Get last 5 numbers (excluding the very last one drawn which is currentNumber)
+  const historyNumbers = drawnNumbers.length > 1 
+    ? [...drawnNumbers].slice(0, -1).reverse().slice(0, 5) 
+    : [];
+
   return (
     <div className="min-h-screen bg-slate-900 flex flex-col items-center py-8 px-4 font-sans">
       
@@ -132,13 +137,13 @@ const App: React.FC = () => {
           {/* Main Draw Area */}
           <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 py-8">
             
-            {/* Control Button */}
-            <div className="order-2 md:order-1">
+            {/* Control Side */}
+            <div className="order-2 md:order-1 flex flex-col items-center md:items-start w-full md:w-auto">
               <button
                 onClick={drawNumber}
                 disabled={isAnimating || gameState === GameState.FINISHED}
                 className={`
-                  relative group overflow-hidden px-8 py-6 rounded-2xl font-black text-2xl uppercase tracking-wider transition-all
+                  w-full md:w-64 relative group overflow-hidden px-8 py-6 rounded-2xl font-black text-2xl uppercase tracking-wider transition-all
                   ${gameState === GameState.FINISHED 
                     ? 'bg-slate-700 cursor-not-allowed opacity-50 text-slate-400' 
                     : isAnimating 
@@ -155,8 +160,27 @@ const App: React.FC = () => {
                 )}
               </button>
               
+              {/* History Panel - Now clearly below the button */}
+              <div className="mt-8 w-full">
+                <div className="flex items-center gap-2 mb-3 text-slate-400 text-sm font-bold uppercase tracking-widest">
+                  <History className="w-4 h-4" />
+                  <span>Últimas Sorteadas</span>
+                </div>
+                <div className="flex items-center gap-3 bg-slate-800/30 p-4 rounded-2xl border border-slate-700/30 min-h-[80px]">
+                  {historyNumbers.length > 0 ? (
+                    historyNumbers.map((num, idx) => (
+                      <div key={`${num}-${idx}`} className="animate-in fade-in zoom-in slide-in-from-left-2 duration-300">
+                        <BingoBall number={num} size="md" />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-slate-600 text-sm italic py-2">Nenhum histórico ainda...</div>
+                  )}
+                </div>
+              </div>
+
               {gameState === GameState.FINISHED && (
-                <div className="mt-4 text-center text-yellow-400 font-bold flex flex-col items-center animate-bounce">
+                <div className="mt-4 w-full text-center text-yellow-400 font-bold flex flex-col items-center animate-bounce">
                   <Trophy className="w-8 h-8 mb-1" />
                   Sorteio Completo!
                 </div>
@@ -193,6 +217,12 @@ const App: React.FC = () => {
 
         </div>
       )}
+
+      <style>{`
+        @keyframes shimmer {
+          100% { transform: translateX(100%); }
+        }
+      `}</style>
     </div>
   );
 };
